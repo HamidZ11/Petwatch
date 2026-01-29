@@ -1,0 +1,174 @@
+<?php require('template/header.phtml'); ?>
+<!-- View file to see all sightings -->
+    <div class="container py-5">
+        <h2 class="text-center mb-4">All Sightings</h2>
+
+        <!-- Sort Controls -->
+        <form method="GET" class="text-center mb-4">
+            <input type="hidden" name="page" value="sightings">
+            <label for="sort" class="me-2 fw-semibold">Sort by:</label>
+            <select name="sort" id="sort" class="form-select d-inline-block w-auto">
+                <option value="dateReported DESC" <?= ($_GET['sort'] ?? '') === 'dateReported DESC' ? 'selected' : '' ?>>Newest First</option>
+                <option value="dateReported ASC" <?= ($_GET['sort'] ?? '') === 'dateReported ASC' ? 'selected' : '' ?>>Oldest First</option>
+                <option value="petName ASC" <?= ($_GET['sort'] ?? '') === 'petName ASC' ? 'selected' : '' ?>>Pet Name (A–Z)</option>
+                <option value="petName DESC" <?= ($_GET['sort'] ?? '') === 'petName DESC' ? 'selected' : '' ?>>Pet Name (Z–A)</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm ms-2">Sort</button>
+        </form>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <?php if (!empty($view->sightingsDataSet)): ?>
+
+                    <!-- DESKTOP TABLE VIEW -->
+                    <div class="table-responsive d-none d-md-block">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 7%;">Sighting ID</th>
+                                    <th style="width: 10%;">Pet Name</th>
+                                    <th style="width: 8%;">Pet ID</th>
+                                    <th style="width: 25%;">Description</th>
+                                    <th style="width: 12%;">Latitude</th>
+                                    <th style="width: 12%;">Longitude</th>
+                                    <th style="width: 13%;">Date Reported</th>
+                                    <th style="width: 8%;">Reported By</th>
+                                    <th style="width: 5%;">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <?php foreach ($view->sightingsDataSet as $sighting): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($sighting['sightingID']) ?></td>
+                                        <td><?= htmlspecialchars($sighting['petName'] ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($sighting['petID'] ?? '—') ?></td>
+                                        <td style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">
+                                            <?= htmlspecialchars($sighting['description']) ?>
+                                        </td>
+                                        <td><?= isset($sighting['latitude']) ? round($sighting['latitude'], 5) : '—' ?></td>
+                                        <td><?= isset($sighting['longitude']) ? round($sighting['longitude'], 5) : '—' ?></td>
+                                        <td><?= htmlspecialchars($sighting['dateReported']) ?></td>
+                                        <td><?= htmlspecialchars($sighting['reporterName'] ?? 'Unknown') ?></td>
+                                        <td style="white-space: nowrap;">
+                                            <?php if (!empty($sighting['petID'])): ?>
+                                                <a href="index.php?page=map&petID=<?= urlencode($sighting['petID']) ?>"
+                                                   class="btn btn-sm btn-outline-info mb-1">View on Map</a>
+                                            <?php endif; ?>
+                                            <?php if (isset($_SESSION['user']) && $_SESSION['user']['userID'] == $sighting['userID']): ?>
+                                                <a href="index.php?page=editSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>"
+                                                   class="btn btn-sm btn-outline-warning mb-1">Edit</a>
+                                                <a href="index.php?page=deleteSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>"
+                                                   class="btn btn-sm btn-outline-danger mb-1"
+                                                   onclick="return confirm('Delete this sighting?');">Delete</a>
+                                            <?php else: ?>
+                                                —
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <?php if (!empty($view->sightingsDataSet)): ?>
+                        <?php
+                        $currentPage = $view->currentPage ?? 1;
+                        $totalPages = $view->totalPages ?? 1;
+                        $baseUrl = "index.php?page=sightings";
+                        $queryParams = $_GET;
+                        unset($queryParams['pageNum']);
+                        $queryString = http_build_query($queryParams);
+
+                        $buildUrl = function ($pageNum) use ($baseUrl, $queryString) {
+                            return $baseUrl . ($queryString ? '&' . $queryString : '') . '&pageNum=' . (int)$pageNum;
+                        };
+                        ?>
+                        <div class="d-flex justify-content-center mt-4 align-items-center gap-3 flex-wrap">
+                            <?php if ($currentPage > 1): ?>
+                                <a href="<?= $buildUrl($currentPage - 1) ?>" class="btn btn-outline-primary">Previous</a>
+                            <?php endif; ?>
+
+                            <div class="pagination-links">
+                                <?php
+                                $start = max(1, $currentPage - 2);
+                                $end = min($totalPages, $currentPage + 2);
+                                ?>
+                                <?php if ($start > 1): ?>
+                                    <a class="page-link" href="<?= $buildUrl(1) ?>">1</a>
+                                    <?php if ($start > 2): ?><span class="page-ellipsis">…</span><?php endif; ?>
+                                <?php endif; ?>
+                                <?php for ($i = $start; $i <= $end; $i++): ?>
+                                    <a class="page-link <?= ($i === $currentPage) ? 'active' : '' ?>" href="<?= $buildUrl($i) ?>"><?= $i ?></a>
+                                <?php endfor; ?>
+                                <?php if ($end < $totalPages): ?>
+                                    <?php if ($end < $totalPages - 1): ?><span class="page-ellipsis">…</span><?php endif; ?>
+                                    <a class="page-link" href="<?= $buildUrl($totalPages) ?>"><?= $totalPages ?></a>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if ($currentPage < $totalPages): ?>
+                                <a href="<?= $buildUrl($currentPage + 1) ?>" class="btn btn-outline-primary">Next</a>
+                            <?php endif; ?>
+
+                            <form method="GET" class="jump-form d-flex align-items-center gap-2">
+                                <?php foreach ($queryParams as $k => $v): ?>
+                                    <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars($v) ?>">
+                                <?php endforeach; ?>
+                                <label class="small text-muted">Page</label>
+                                <input type="number" min="1" max="<?= (int)$totalPages ?>" name="pageNum" class="form-control form-control-sm" style="width:80px;" value="<?= (int)$currentPage ?>">
+                                <span class="small text-muted">of <?= (int)$totalPages ?></span>
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Go</button>
+                            </form>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- MOBILE CARD VIEW -->
+                    <div class="d-block d-md-none mt-4">
+                        <?php foreach ($view->sightingsDataSet as $sighting): ?>
+                            <div class="card mb-3 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-1">🐾 <?= htmlspecialchars($sighting['petName'] ?? 'Unknown Pet') ?></h5>
+                                    <small class="text-muted">
+                                        Sighting ID #<?= htmlspecialchars($sighting['sightingID']) ?> •
+                                        Pet ID #<?= htmlspecialchars($sighting['petID'] ?? '—') ?>
+                                    </small>
+
+                                    <p class="card-text mt-3 mb-1"><strong>Description:</strong> <?= htmlspecialchars($sighting['description']) ?></p>
+
+                                    <div class="text-muted small mb-3">
+                                        <div><strong>Latitude:</strong> <?= htmlspecialchars($sighting['latitude'] ?? '—') ?></div>
+                                        <div><strong>Longitude:</strong> <?= htmlspecialchars($sighting['longitude'] ?? '—') ?></div>
+                                        <div><strong>Date Reported:</strong> <?= htmlspecialchars($sighting['dateReported']) ?></div>
+                                        <div><strong>Reported By:</strong> <?= htmlspecialchars($sighting['reporterName'] ?? 'Unknown') ?></div>
+                                    </div>
+
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <?php if (!empty($sighting['petID'])): ?>
+                                            <a href="index.php?page=map&petID=<?= urlencode($sighting['petID']) ?>"
+                                               class="btn btn-sm btn-outline-info">Map</a>
+                                        <?php endif; ?>
+                                        <?php if (isset($_SESSION['user']) && $_SESSION['user']['userID'] == $sighting['userID']): ?>
+                                            <a href="index.php?page=editSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>"
+                                               class="btn btn-sm btn-outline-warning">Edit</a>
+                                            <a href="index.php?page=deleteSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>"
+                                               class="btn btn-sm btn-outline-danger"
+                                               onclick="return confirm('Delete this sighting?');">Delete</a>
+                                        <?php else: ?>
+                                            <span class="text-muted small">View only</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                <?php else: ?>
+                    <p class="text-center text-muted mb-0">No sightings recorded yet.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+<?php require('template/footer.phtml'); ?>

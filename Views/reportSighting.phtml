@@ -1,0 +1,79 @@
+<?php require('template/header.phtml'); ?>
+
+    <!-- View file for the Report Sighting page -->
+    <div class="container py-5">
+        <div class="card shadow-sm col-md-6 mx-auto">
+            <div class="card-body">
+                <h3 class="text-center mb-4">Report a Pet Sighting</h3>
+
+                <!-- Display success or error message -->
+                <?php if (isset($view->message)): ?>
+                    <div class="alert alert-info text-center"><?= htmlspecialchars($view->message) ?></div>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['user'])): ?>
+
+                    <!-- If petID is passed in URL, show which pet the sighting is for -->
+                    <?php if (isset($_GET['petID'])): ?>
+                        <?php
+                        require_once 'Models/PetDataSet.php';
+                        $petDataSet = new PetDataSet();
+                        $pet = $petDataSet->getPetByID($_GET['petID']);
+                        $petName = $pet ? $pet->getName() : null;
+                        ?>
+                        <div class="alert alert-info text-center mb-3">
+                            Reporting a sighting for Pet ID #<?= htmlspecialchars($_GET['petID']); ?>
+                            <?= !empty($petName) ? '(' . htmlspecialchars($petName) . ')' : ''; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Sighting form -->
+                    <form method="POST" action="index.php?page=reportSighting">
+                        <div class="mb-3">
+                            <label class="form-label">Pet ID</label>
+                            <input type="number" name="petID" class="form-control"
+                                   min="1"
+                                   value="<?= isset($_GET['petID']) ? htmlspecialchars($_GET['petID']) : ''; ?>"
+                                   <?= isset($_GET['petID']) ? 'readonly' : ''; ?>
+                                   placeholder="Enter the Pet ID" required>
+                        </input>
+                        <div class="text-end mt-2">
+                            <a href="index.php?page=pets" class="btn btn-outline-secondary btn-sm">
+                                🔍 Find Pet ID
+                            </a>
+                        </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3"
+                                      placeholder="Where was the pet seen?" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Latitude (optional)</label>
+                            <input type="text" name="latitude" class="form-control" placeholder="e.g., 53.483959">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Longitude (optional)</label>
+                            <input type="text" name="longitude" class="form-control" placeholder="-2.244644">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Submit Sighting</button>
+                    </form>
+
+                    <!-- If not logged in -->
+                <?php else: ?>
+                    <div class="alert alert-warning text-center mt-4">
+                        ⚠️ You must be logged in to report a pet sighting.
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="index.php?page=login" class="btn btn-primary">Login</a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+<?php require('template/footer.phtml'); ?>

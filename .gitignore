@@ -1,0 +1,21 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Dependencies (if using Composer)
+vendor/
+
+# Secrets / config (add your actual config filenames if needed)
+.env
+*.key
+
+# Uploads (optional: keep if you want sample images in repo)
+uploads/
+
+# Local DB / exports
+*.sqlite
+*.db
+
+# Temp / sensitive exports
+user_passwords_temp.csv

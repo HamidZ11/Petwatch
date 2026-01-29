@@ -1,0 +1,42 @@
+<?php require('template/header.phtml'); ?>
+
+    <!-- Login page view -->
+    <div class="row justify-content-center py-5">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="text-center mb-4">PetWatch Login</h2>
+
+                    <!-- Display login error message -->
+                    <?php if (!empty($view->message)): ?>
+                        <div class="alert alert-danger">
+                            <?= htmlspecialchars($view->message) ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Login form -->
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label class="form-label">Username or Email:</label>
+                            <input type="text" name="username" class="form-control" placeholder="Enter username or email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password:</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+
+                        <!-- Submit button -->
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+
+                    <!-- Link back to home -->
+                    <div class="text-center mt-3">
+                        <a href="index.php" class="text-secondary">Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<?php require('template/footer.phtml'); ?>

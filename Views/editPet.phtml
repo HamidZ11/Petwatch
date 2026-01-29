@@ -1,0 +1,110 @@
+<?php require('template/header.phtml'); ?>
+
+    <!-- View file for editing an existing pet listing -->
+    <div class="container py-5">
+        <div class="card shadow-sm col-md-6 mx-auto">
+            <div class="card-body">
+                <h3 class="text-center mb-4 fw-bold text-primary">Edit Pet Listing</h3>
+
+                <!-- Display success/error message from controller -->
+                <?php if (!empty($view->message)): ?>
+                    <div class="alert alert-info text-center">
+                        <?= htmlspecialchars($view->message) ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Show form only if pet data is available -->
+                <?php if (!empty($view->petData)): ?>
+                    <form method="POST"
+                          action="index.php?page=editPet&amp;petID=<?= urlencode($view->petData['petID']) ?>"
+                          enctype="multipart/form-data">
+
+                        <!-- Pet name -->
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control"
+                                   value="<?= htmlspecialchars($view->petData['name']) ?>" required>
+                        </div>
+
+                        <!-- Pet type -->
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <select name="type" class="form-select" required>
+                                <?php
+                                $types = ['Dog', 'Cat', 'Rabbit', 'Bird', 'Hamster', 'Fish', 'Turtle', 'Other'];
+                                foreach ($types as $type): ?>
+                                    <option value="<?= $type ?>" <?= ($view->petData['type'] === $type) ? 'selected' : '' ?>>
+                                        <?= $type ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Pet age -->
+                        <div class="mb-3">
+                            <label class="form-label">Age</label>
+                            <input type="number" name="age" class="form-control"
+                                   value="<?= htmlspecialchars($view->petData['age']) ?>" min="0" max="50" required>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3"
+                                      required><?= htmlspecialchars($view->petData['description']) ?></textarea>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="missing" <?= ($view->petData['status'] === 'missing') ? 'selected' : '' ?>>Missing</option>
+                                <option value="found" <?= ($view->petData['status'] === 'found') ? 'selected' : '' ?>>Found</option>
+                            </select>
+                        </div>
+
+                        <!-- Current image preview -->
+                        <div class="mb-3 text-center">
+                            <label class="form-label d-block">Current Image</label>
+                            <?php if (!empty($view->petData['imagePath'])): ?>
+                                <img src="<?= htmlspecialchars($view->petData['imagePath']) ?>"
+                                     alt="Pet Image"
+                                     class="border rounded mb-2"
+                                     width="150" height="150"
+                                     style="object-fit: cover;">
+                            <?php else: ?>
+                                <p class="text-muted mb-2">No image uploaded</p>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Upload new image -->
+                        <div class="mb-4">
+                            <label class="form-label">Upload New Image (JPG only)</label>
+                            <input type="file" name="petImage" class="form-control" accept=".jpg, .jpeg" id="petImageInput">
+                            <small class="text-muted">Only JPG or JPEG images are supported.</small>
+                        </div>
+
+                        <!-- Front-end validation for file type -->
+                        <script>
+                            document.getElementById('petImageInput').addEventListener('change', function(e) {
+                                const file = e.target.files[0];
+                                if (file && !file.name.toLowerCase().match(/\.(jpg|jpeg)$/)) {
+                                    alert('ERROR Only JPG or JPEG files are supported.');
+                                    e.target.value = ''; // reset input
+                                }
+                            });
+                        </script>
+
+                        <!-- Submit -->
+                        <button type="submit" class="btn btn-success w-100 fw-semibold">💾 Save Changes</button>
+                    </form>
+
+                    <!-- If no pet found -->
+                <?php else: ?>
+                    <p class="text-center text-muted">No pet data found.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+<?php require('template/footer.phtml'); ?>

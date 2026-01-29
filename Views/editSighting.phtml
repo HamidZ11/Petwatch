@@ -1,0 +1,57 @@
+<?php require('template/header.phtml'); ?>
+
+    <!-- View file for editing an existing sighting -->
+    <div class="container py-5">
+        <div class="card shadow-sm col-md-6 mx-auto">
+            <div class="card-body">
+                <h3 class="text-center mb-4">Edit Sighting</h3>
+
+                <!-- Display info or error message from controller -->
+                <?php if (!empty($this->message)): ?>
+                    <div class="alert alert-info text-center">
+                        <?= htmlspecialchars($this->message) ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Show form only if sighting data is available -->
+                <?php if (!empty($this->view->sighting)): ?>
+                    <form method="POST"
+                          action="index.php?page=editSighting&amp;sightingID=<?= urlencode($this->view->sighting['sightingID']) ?>">
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" required>
+              <?= htmlspecialchars($this->view->sighting['description']) ?>
+            </textarea>
+                        </div>
+
+                        <!-- Latitude -->
+                        <div class="mb-3">
+                            <label class="form-label">Latitude</label>
+                            <input type="text" name="latitude" class="form-control"
+                                   value="<?= htmlspecialchars($this->view->sighting['latitude'] ?? '') ?>"
+                                   placeholder="e.g., 53.483959">
+                        </div>
+
+                        <!-- Longitude -->
+                        <div class="mb-3">
+                            <label class="form-label">Longitude</label>
+                            <input type="text" name="longitude" class="form-control"
+                                   value="<?= htmlspecialchars($this->view->sighting['longitude'] ?? '') ?>"
+                                   placeholder="e.g., -2.244644">
+                        </div>
+
+                        <!-- Submit button -->
+                        <button type="submit" class="btn btn-success w-100">Save Changes</button>
+                    </form>
+
+                    <!-- If no sighting found -->
+                <?php else: ?>
+                    <p class="text-center text-muted">No sighting data found.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+<?php require('template/footer.phtml'); ?>

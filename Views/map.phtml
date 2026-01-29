@@ -1,0 +1,28 @@
+<?php require('Views/template/header.phtml'); ?>
+
+    <!-- CSRF: set this somewhere once per session -->
+    <meta name="csrf" content="<?= htmlspecialchars($_SESSION['csrf'] ?? '', ENT_QUOTES) ?>">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <div id="mapApp" data-logged-in="<?= isset($_SESSION['user']) ? '1' : '0' ?>" style="display:flex; gap:16px;">
+        <div style="width:35%; max-height:80vh; overflow:auto;">
+            <h3>Recent sightings</h3>
+            <div style="margin-bottom:8px;">
+                <input id="petSearch" type="text" placeholder="Search pet name or sighting…" class="form-control">
+            </div>
+            <div id="petList"></div>
+        </div>
+
+        <div style="width:65%;">
+            <div id="map" style="height:80vh; border-radius:8px;"></div>
+        </div>
+    </div>
+
+    <script src="/js/apiClient.js"></script>
+    <script src="/js/mapView.js"></script>
+    <script src="/js/petListView.js"></script>
+    <script src="/js/appMap.js"></script>
+
+<?php require('Views/template/footer.phtml'); ?>

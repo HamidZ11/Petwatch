@@ -1,0 +1,23 @@
+<?php require('template/header.phtml'); ?>
+    <!-- View file for about page -->
+    <div class="container text-center py-5">
+        <h2 class="fw-bold mb-3 text-primary">About PetWatch</h2>
+
+        <p class="lead text-muted mb-4" style="max-width: 750px; margin: 0 auto;">
+            <strong>PetWatch</strong> is a simple web app that helps people report and track lost pets.
+            Users can post missing pet listings, report sightings, and view the listings and sightings from other people.
+        </p>
+
+        <p class="text-muted" style="max-width: 700px; margin: 20px auto;">
+            This project was developed as part of the <strong>Client Server Systems</strong> module at the
+            <strong>University of Salford</strong>. It demonstrates key skills in
+            <strong>PHP</strong>, <strong>SQLite</strong>, and <strong>MVC architecture</strong>,
+            along with user authentication, database management, and responsive web design.
+        </p>
+
+        <div class="mt-4">
+            <a href="index.php?page=pets" class="btn btn-primary me-2">Browse Pets</a>
+            <a href="index.php?page=createListing" class="btn btn-outline-primary">Report Missing Pet</a>
+        </div>
+    </div>
+<?php require('template/footer.phtml'); ?>

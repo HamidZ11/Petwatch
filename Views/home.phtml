@@ -1,0 +1,58 @@
+<?php require('template/header.phtml'); ?>
+
+    <!-- Home page view -->
+    <div class="text-center py-5">
+        <h1 class="mb-3">Welcome to <span class="text-primary">PetWatch</span></h1>
+        <p class="lead text-muted mb-5">
+            A web app where you can view missing pet listings, create your own listings, or report a sighting of a missing pet.
+        </p>
+
+        <!-- Navigation buttons -->
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="index.php?page=pets" class="btn btn-primary btn-lg px-4">Browse Pets</a>
+            <a href="index.php?page=createListing" class="btn btn-outline-primary btn-lg px-4">Report Missing Pet</a>
+            <a href="index.php?page=reportSighting" class="btn btn-outline-secondary btn-lg px-4">Report a Sighting</a>
+        </div>
+
+        <hr class="my-5" style="max-width:600px;margin:auto;">
+
+        <!-- Recently listed pets -->
+        <h2 class="mb-4">Recently Listed Pets</h2>
+        <div class="row justify-content-center">
+            <?php if (!empty($view->recentPets)): ?>
+                <?php foreach ($view->recentPets as $pet): ?>
+                    <div class="col-md-3 mb-4">
+                        <div class="card shadow-sm">
+
+                            <!-- Pet image -->
+                            <?php if ($pet->getImagePath()): ?>
+                                <img src="<?= htmlspecialchars($pet->getImagePath()) ?>"
+                                     class="card-img-top"
+                                     alt="<?= htmlspecialchars($pet->getName()) ?>"
+                                     style="height:200px;object-fit:cover;">
+                            <?php else: ?>
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height:200px;">
+                                    <span class="text-muted">No Image</span>
+                                </div>
+                            <?php endif; ?>
+
+                            <!-- Pet info -->
+                            <div class="card-body text-center">
+                                <h5 class="card-title"><?= htmlspecialchars($pet->getName()) ?></h5>
+                                <p class="text-muted">
+                                    <?= htmlspecialchars($pet->getType()) ?> — <?= htmlspecialchars($pet->getStatus()) ?>
+                                </p>
+                                <a href="index.php?page=pets" class="btn btn-outline-primary btn-sm">View More</a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+
+                <!-- If no pets found -->
+            <?php else: ?>
+                <p class="text-center text-muted">No recent pets found.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+
+<?php require('template/footer.phtml'); ?>

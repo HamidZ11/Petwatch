@@ -1,0 +1,67 @@
+<?php require('template/header.phtml'); ?>
+
+    <!-- View file for the View Sightings page (for each pet) -->
+    <div class="container py-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="text-center mb-4">
+                    Sightings for Pet ID <?= htmlspecialchars($_GET['petID'] ?? '') ?>
+                    <?= !empty($view->petName) ? '(' . htmlspecialchars($view->petName) . ')' : '' ?>
+                </h3>
+
+                <!-- Display all sightings for this pet -->
+                <?php if (!empty($view->sightingsDataSet)): ?>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-dark">
+                            <tr>
+                                <th>Sighting ID</th>
+                                <th>Description</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                                <th>Date Reported</th>
+                                <th>Reported By</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach ($view->sightingsDataSet as $sighting): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($sighting['sightingID']) ?></td>
+                                    <td><?= htmlspecialchars($sighting['description']) ?></td>
+                                    <td><?= htmlspecialchars($sighting['latitude'] ?? '—') ?></td>
+                                    <td><?= htmlspecialchars($sighting['longitude'] ?? '—') ?></td>
+                                    <td><?= htmlspecialchars($sighting['dateReported']) ?></td>
+                                    <td><?= htmlspecialchars($sighting['username'] ?? 'Unknown') ?></td>
+
+                                    <!-- Only show edit/delete if the logged-in user reported it -->
+                                    <td>
+                                        <?php if (
+                                                isset($_SESSION['user']) &&
+                                                isset($sighting['userID']) &&
+                                                $_SESSION['user']['userID'] == $sighting['userID']
+                                        ): ?>
+                                            <a href="index.php?page=editSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>"
+                                               class="btn btn-sm btn-outline-warning mb-1">Edit</a>
+                                            <a href="index.php?page=deleteSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>"
+                                               class="btn btn-sm btn-outline-danger"
+                                               onclick="return confirm('Are you sure you want to delete this sighting?');">Delete</a>
+                                        <?php else: ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- If no sightings exist -->
+                <?php else: ?>
+                    <p class="text-center text-muted">No sightings recorded for this pet yet.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+<?php require('template/footer.phtml'); ?>

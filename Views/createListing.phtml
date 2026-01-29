@@ -1,0 +1,91 @@
+<?php require('template/header.phtml'); ?>
+
+    <!-- View file for the Create Listing page -->
+    <div class="container py-5">
+        <div class="card shadow-sm col-md-6 mx-auto">
+            <div class="card-body">
+                <h3 class="text-center mb-4">Create New Pet Listing</h3>
+
+                <!-- Display message from controller (success or error) -->
+                <?php if (!empty($view->message)): ?>
+                    <div class="alert alert-success text-center">
+                        <?= htmlspecialchars($view->message) ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- If user is not logged in -->
+                <?php if (!isset($_SESSION['user'])): ?>
+                    <div class="alert alert-warning text-center mt-4">
+                        ⚠️ You must be logged in (as an owner) to create a pet listing.
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="index.php?page=login" class="btn btn-primary">Login</a>
+                    </div>
+
+                    <!-- If logged in but not an Owner -->
+                <?php elseif ($_SESSION['user']['userType'] !== 'Owner'): ?>
+                    <div class="alert alert-danger text-center mt-4">
+                        🚫 Only pet owners can create listings.
+                    </div>
+
+                    <!-- Show form if valid owner -->
+                <?php else: ?>
+                    <form method="POST" action="index.php?page=createListing" enctype="multipart/form-data">
+
+                        <!-- Pet name -->
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+
+                        <!-- Pet type -->
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <select name="type" class="form-select" required>
+                                <option value="">Select Type</option>
+                                <option value="Dog">Dog</option>
+                                <option value="Cat">Cat</option>
+                                <option value="Rabbit">Rabbit</option>
+                                <option value="Bird">Bird</option>
+                                <option value="Hamster">Hamster</option>
+                                <option value="Fish">Fish</option>
+                                <option value="Turtle">Turtle</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Pet age -->
+                        <div class="mb-3">
+                            <label class="form-label">Age</label>
+                            <input type="number" name="age" class="form-control" min="0" max="50" required>
+                            <small class="text-muted">Please enter an age between 0 and 50.</small>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" required></textarea>
+                        </div>
+
+                        <!-- Image upload -->
+                        <div class="mb-3">
+                            <label class="form-label">Pet Image</label>
+                            <input type="file" name="petImage" class="form-control" accept="image/*">
+                        </div>
+
+                        <!-- Status (default: Missing) -->
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <input type="text" name="status" class="form-control" value="Missing" readonly>
+                            <small class="text-muted">New listings are automatically marked as missing.</small>
+                        </div>
+
+                        <!-- Submit button -->
+                        <button type="submit" class="btn btn-primary w-100">Add Pet</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+<?php require('template/footer.phtml'); ?>
