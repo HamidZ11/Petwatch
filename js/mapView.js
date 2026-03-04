@@ -25,6 +25,11 @@ class MapView {
         this.markers.set(key, marker);
     }
 
+    clearMarkers() {
+        this.markers.forEach(marker => this.map.removeLayer(marker));
+        this.markers.clear();
+    }
+
     focusMarker(markerKey) {
         const marker = this.markers.get(String(markerKey));
         if (!marker) return;

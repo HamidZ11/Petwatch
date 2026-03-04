@@ -41,9 +41,7 @@ if (!in_array($page, $allowedPages, true)) {
     $page = 'home';
 }
 
-// Load shared controller
-require_once 'Controllers/PetController.php';
-$petController = new PetController();
+// Load shared view container
 $view = new stdClass();
 
 // Routing (switch-case)
@@ -83,12 +81,13 @@ switch ($page) {
     case 'home':
         require_once 'Controllers/PetController.php';
         $petController = new PetController();
-        $view = new stdClass();
         $view->recentPets = $petController->getRecentPets(3); // latest 3 pets
         require_once 'Views/home.phtml';
         break;
 
     case 'pets':
+        require_once 'Controllers/PetController.php';
+        $petController = new PetController();
         $view->petsDataSet = $petController->petsDataSet;
         $view->currentPage = $petController->currentPage ?? 1;
         $view->totalPages = $petController->totalPages ?? 1;
@@ -107,6 +106,11 @@ switch ($page) {
         require_once 'Controllers/DeletePetController.php';
         $controller = new DeletePetController();
         $view->message = $controller->message ?? null;
+        require_once 'Controllers/PetController.php';
+        $petController = new PetController();
+        $view->petsDataSet = $petController->petsDataSet;
+        $view->currentPage = $petController->currentPage ?? 1;
+        $view->totalPages = $petController->totalPages ?? 1;
         require_once 'Views/pets.phtml';
         break;
 

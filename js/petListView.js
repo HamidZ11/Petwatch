@@ -4,7 +4,6 @@ class PetListView {
         this.onSelect = onSelect;
         this.onReport = onReport;
         this.items = [];
-        this.filterQuery = "";
     }
 
     setItems(items) {
@@ -12,22 +11,15 @@ class PetListView {
         this.render();
     }
 
-    setFilter(query) {
-        this.filterQuery = String(query ?? "").trim().toLowerCase();
+    appendItems(items) {
+        if (!Array.isArray(items) || items.length === 0) return;
+        this.items = this.items.concat(items);
         this.render();
     }
 
     render() {
         this.el.innerHTML = "";
-        const q = this.filterQuery;
-        const list = q
-            ? this.items.filter(p => {
-                const name = String(p.name ?? "").toLowerCase();
-                const type = String(p.type ?? "").toLowerCase();
-                const desc = String(p.sightingDescription ?? "").toLowerCase();
-                return name.includes(q) || type.includes(q) || desc.includes(q);
-            })
-            : this.items;
+        const list = this.items;
 
         list.forEach(p => {
             const row = document.createElement("div");

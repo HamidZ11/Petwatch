@@ -94,8 +94,32 @@ class SightingsDataSet {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Fetch all sightings with pet details (for map markers)
-    public function fetchSightingsWithPets($limit = 1000, $offset = 0) {
+    // Count sightings with pet fields, optionally filtered by search term
+    public function countSightingsWithPets($search = '') {
+        $search = trim((string)$search);
+        $sql = "
+            SELECT COUNT(*)
+            FROM sightings s
+            INNER JOIN pets p ON s.petID = p.petID
+            WHERE (
+                :search = ''
+                OR p.name LIKE :searchLike
+                OR p.type LIKE :searchLike
+                OR s.description LIKE :searchLike
+            )
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':search', $search, PDO::PARAM_STR);
+        $stmt->bindValue(':searchLike', '%' . $search . '%', PDO::PARAM_STR);
+        $stmt->execute();
+
+        return (int)$stmt->fetchColumn();
+    }
+
+    // Fetch sightings with pet details (for map markers), with optional search + pagination
+    public function fetchSightingsWithPets($search = '', $limit = 20, $offset = 0) {
+        $search = trim((string)$search);
         $sql = "
             SELECT
                 s.sightingID,
@@ -112,11 +136,19 @@ class SightingsDataSet {
             FROM sightings s
             INNER JOIN pets p ON s.petID = p.petID
             LEFT JOIN users u ON s.userID = u.userID
+            WHERE (
+                :search = ''
+                OR p.name LIKE :searchLike
+                OR p.type LIKE :searchLike
+                OR s.description LIKE :searchLike
+            )
             ORDER BY s.dateReported DESC, s.sightingID DESC
             LIMIT :limit OFFSET :offset
         ";
 
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':search', $search, PDO::PARAM_STR);
+        $stmt->bindValue(':searchLike', '%' . $search . '%', PDO::PARAM_STR);
         $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
         $stmt->execute();
