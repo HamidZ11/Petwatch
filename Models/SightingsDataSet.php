@@ -156,6 +156,35 @@ class SightingsDataSet {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Fetch all sightings for a specific pet (used by "Show on map")
+    public function fetchSightingsByPet($petID) {
+        $sql = "
+            SELECT
+                s.sightingID,
+                s.petID,
+                s.description AS sightingDescription,
+                s.latitude,
+                s.longitude,
+                s.dateReported,
+                p.name,
+                p.type,
+                p.status,
+                p.description AS petDescription,
+                u.username AS reporterName
+            FROM sightings s
+            INNER JOIN pets p ON s.petID = p.petID
+            LEFT JOIN users u ON s.userID = u.userID
+            WHERE s.petID = :petID
+            ORDER BY s.dateReported DESC, s.sightingID DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':petID', (int)$petID, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Insert a new sighting (AJAX endpoint will call this)
     public function insertSighting($petId, $userId, $description, $latitude, $longitude) {
         $sql = "

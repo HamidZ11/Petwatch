@@ -47,27 +47,27 @@ class PetDataSet {
         $params = [];
 
         if (!empty($keyword)) {
-            $sql .= " AND (name LIKE :keyword OR type LIKE :keyword OR description LIKE :keyword)";
+            $sql .= " AND (p.name LIKE :keyword OR p.type LIKE :keyword OR p.description LIKE :keyword)";
             $params[':keyword'] = "%$keyword%";
         }
 
         if (!empty($status)) {
-            $sql .= " AND status = :status";
+            $sql .= " AND p.status = :status";
             $params[':status'] = $status;
         }
 
         if (!empty($type)) {
-            $sql .= " AND type = :type";
+            $sql .= " AND p.type = :type";
             $params[':type'] = $type;
         }
 
         if (!empty($minAge)) {
-            $sql .= " AND age >= :minAge";
+            $sql .= " AND p.age >= :minAge";
             $params[':minAge'] = $minAge;
         }
 
         if (!empty($maxAge)) {
-            $sql .= " AND age <= :maxAge";
+            $sql .= " AND p.age <= :maxAge";
             $params[':maxAge'] = $maxAge;
         }
 

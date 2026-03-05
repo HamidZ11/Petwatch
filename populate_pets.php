@@ -2,7 +2,9 @@
 //This is a script to add data to the pets table
 $dbPath = __DIR__ . '/Database/petwatch.db';
 $uploadsDir = __DIR__ . '/uploads';
-$numPets = 100;
+
+// CHANGED FOR SEMESTER 2 DATASET SCALE (WAS 100)
+$numPets = 1000;
 
 $pdo = new PDO('sqlite:' . $dbPath);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -62,7 +64,10 @@ for ($i = 0; $i < $numPets; $i++) {
     $description = $descriptions[array_rand($descriptions)];
     $age = random_int(1, 15);
     $status = $statuses[array_rand($statuses)];
-    $ownerID = 101 + ($i % 100); // distribute across 100 owners
+
+    // OWNER DISTRIBUTION REMAINS SAME (100 OWNERS)
+    $ownerID = 101 + ($i % 100);
+
     $dateAdded = date('Y-m-d H:i:s');
     $imagePath = 'uploads/' . $image;
 

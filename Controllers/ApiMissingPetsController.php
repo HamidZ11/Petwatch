@@ -14,12 +14,24 @@ class ApiMissingPetsController {
                 $pageParam = 1;
             }
             $page = max(1, (int)$pageParam);
+
             $limit = min(50, max(1, (int)($_GET['limit'] ?? 20)));
             $offset = ($page - 1) * $limit;
 
+            $petID = isset($_GET['petID']) ? (int)$_GET['petID'] : null;
+
             $ds = new SightingsDataSet();
-            $rows = $ds->fetchSightingsWithPets($search, $limit, $offset);
-            $total = $ds->countSightingsWithPets($search);
+
+            if ($petID) {
+                // When a specific pet is requested ("Show on map"), bypass pagination
+                $rows = $ds->fetchSightingsByPet($petID);
+                $total = count($rows);
+                $page = 1;
+            } else {
+                // Default behaviour: paginated + searchable dataset
+                $rows = $ds->fetchSightingsWithPets($search, $limit, $offset);
+                $total = $ds->countSightingsWithPets($search);
+            }
 
             echo json_encode([
                 'ok' => true,

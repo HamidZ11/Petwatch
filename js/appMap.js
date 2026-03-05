@@ -1,167 +1,208 @@
 (async function () {
+
     const api = new ApiClient();
     const mapView = new MapView("map");
-    const focusPetId = new URLSearchParams(window.location.search).get("petID");
+
+    const params = new URLSearchParams(window.location.search);
+    const focusPetId = params.get("petID");
+    const focusSightingId = params.get("sightingID");
+
     const appEl = document.getElementById("mapApp");
     const isLoggedIn = appEl?.dataset?.loggedIn === "1";
+
     const searchEl = document.getElementById("petSearch");
     const loadMoreBtn = document.getElementById("loadMoreBtn");
+
     const limit = 20;
+
     let currentPage = 1;
     let currentQuery = "";
     let isLoading = false;
     let hasMore = false;
     let requestSeq = 0;
 
-    const fallbackCenter = { lat: 53.483959, lng: -2.244644, zoom: 12 };
+    const fallbackCenter = { lat:53.483959 , lng:-2.244644 , zoom:12 };
 
-    // centre on user location
-    mapView.setCenter(fallbackCenter.lat, fallbackCenter.lng, fallbackCenter.zoom);
-    if (navigator.geolocation) {
+    mapView.setCenter(fallbackCenter.lat,fallbackCenter.lng,fallbackCenter.zoom);
+
+    if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
-            pos => mapView.setCenter(pos.coords.latitude, pos.coords.longitude, 13),
-            () => mapView.setCenter(fallbackCenter.lat, fallbackCenter.lng, fallbackCenter.zoom)
+            pos => mapView.setCenter(pos.coords.latitude,pos.coords.longitude,13),
+            () => mapView.setCenter(fallbackCenter.lat,fallbackCenter.lng,fallbackCenter.zoom)
         );
     }
 
     const list = new PetListView(
         document.getElementById("petList"),
-        (petId) => focusByPetId(petId),
-        (petId) => {
-            if (!petId) return;
-            if (!isLoggedIn) {
+
+        (petId)=>focusByPetId(petId),
+
+        (petId)=>{
+            if(!petId) return;
+
+            if(!isLoggedIn){
                 alert("Login required to report a sighting.");
-                window.location.href = "/index.php?page=login";
+                window.location.href="/index.php?page=login";
                 return;
             }
-            window.location.href = `/index.php?page=reportSighting&petID=${encodeURIComponent(petId)}`;
+
+            window.location.href=`/index.php?page=reportSighting&petID=${encodeURIComponent(petId)}`;
         }
     );
+
     list.petToSighting = new Map();
 
-    function esc(s) {
-        return String(s ?? "").replace(/[&<>"']/g, c => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            "\"": "&quot;",
-            "'": "&#39;"
+    function esc(s){
+        return String(s ?? "").replace(/[&<>"']/g,c=>({
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            "\"":"&quot;",
+            "'":"&#39;"
         }[c]));
     }
 
-    function setLoadMoreVisible(visible) {
-        if (!loadMoreBtn) return;
-        loadMoreBtn.style.display = visible ? "inline-block" : "none";
-        loadMoreBtn.disabled = isLoading;
-    }
+    function processSightings(sightings){
 
-    function processSightings(sightings, append = false) {
-        if (!append) {
-            mapView.clearMarkers();
-            list.setItems([]);
-            list.petToSighting = new Map();
-        }
+        mapView.clearMarkers();
+        list.setItems([]);
+        list.petToSighting = new Map();
 
-        sightings.forEach(s => {
+        sightings.forEach((s,i)=>{
+
             const lat = Number(s.latitude);
             const lng = Number(s.longitude);
-            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-            const popup = `<b>${esc(s.name)}</b><br>${esc(s.sightingDescription || "No sighting details")}<br><small>${esc(s.dateReported || "")}</small>`;
-            mapView.upsertMarker(`sighting:${s.sightingID}`, lat, lng, popup);
+
+            if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+            const popup = `<b>${esc(s.name)}</b><br>${esc(s.sightingDescription || "")}<br><small>${esc(s.dateReported || "")}</small>`;
+
+            mapView.upsertMarker(`sighting:${s.sightingID}`,lat,lng,popup);
+
             const petKey = String(s.petID);
-            if (petKey && !list.petToSighting.has(petKey)) {
-                list.petToSighting.set(petKey, s.sightingID);
-            }
+            list.petToSighting.set(petKey,s.sightingID);
+
         });
 
-        const listItems = sightings.map(s => ({
-            petID: s.petID,
-            name: s.name,
-            type: s.type,
-            sightingDescription: s.sightingDescription,
-            sightingID: s.sightingID
+        const listItems = sightings.map(s=>({
+
+            petID:s.petID,
+            name:s.name,
+            type:s.type,
+            sightingDescription:s.sightingDescription,
+            sightingID:s.sightingID
+
         }));
 
-        if (append) {
-            list.appendItems(listItems);
-        } else {
-            list.setItems(listItems);
-        }
+        list.setItems(listItems);
 
-        if (!append && focusPetId) {
-            focusByPetId(focusPetId);
+        // If a specific sighting was requested, focus it
+        if (focusSightingId) {
+            mapView.focusMarker(`sighting:${focusSightingId}`);
         }
     }
 
-    async function fetchPage(page, query, append = false) {
-        if (isLoading) return;
-        isLoading = true;
-        setLoadMoreVisible(hasMore);
-        const requestId = ++requestSeq;
+    async function fetchPage(page,query,append=false){
 
-        try {
-            const res = await api.get("/index.php?page=api_missing_pets", {
-                search: query,
-                pageNum: page,
-                limit
-            });
-            if (requestId !== requestSeq) return;
-            if (!res || res.ok !== true) {
-                throw new Error(res?.error || "Unable to fetch sightings");
+        if(isLoading) return;
+
+        isLoading = true;
+
+        try{
+
+            let res;
+
+            if(focusPetId){
+
+                res = await api.get("/index.php?page=api_missing_pets",{
+                    petID:focusPetId
+                });
+
+            }else{
+
+                res = await api.get("/index.php?page=api_missing_pets",{
+                    search:query,
+                    pageNum:page,
+                    limit
+                });
+
+            }
+
+            if(!res || res.ok !== true){
+                throw new Error("Unable to fetch sightings");
             }
 
             const sightings = Array.isArray(res.data) ? res.data : [];
-            processSightings(sightings, append);
+
+            if(!append){
+                processSightings(sightings);
+            }else{
+                sightings.forEach(s=>{
+
+                    const lat = Number(s.latitude);
+                    const lng = Number(s.longitude);
+
+                    if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+                    const popup = `<b>${esc(s.name)}</b><br>${esc(s.sightingDescription || "")}<br><small>${esc(s.dateReported || "")}</small>`;
+
+                    mapView.upsertMarker(`sighting:${s.sightingID}`,lat,lng,popup);
+
+                    const petKey = String(s.petID);
+                    list.petToSighting.set(petKey,s.sightingID);
+                });
+
+                const listItems = sightings.map(s=>({
+                    petID:s.petID,
+                    name:s.name,
+                    type:s.type,
+                    sightingDescription:s.sightingDescription,
+                    sightingID:s.sightingID
+                }));
+
+                list.appendItems(listItems);
+            }
+
             const total = Number(res.total ?? 0);
-            hasMore = Number.isFinite(total) ? (page * limit) < total : sightings.length === limit;
-            setLoadMoreVisible(hasMore);
-        } catch (err) {
+
+            if(!focusPetId && loadMoreBtn){
+                hasMore = (page * limit) < total;
+                loadMoreBtn.style.display = hasMore ? "inline-block" : "none";
+            }
+
+        }catch(err){
+
             console.error(err);
-            if (!append) {
-                mapView.clearMarkers();
-                list.setItems([]);
-                list.petToSighting = new Map();
-            }
-            setLoadMoreVisible(false);
-        } finally {
-            isLoading = false;
-            if (loadMoreBtn) {
-                loadMoreBtn.disabled = false;
-            }
         }
+
+        isLoading = false;
     }
 
-    await fetchPage(currentPage, currentQuery, false);
+    await fetchPage(currentPage,currentQuery);
 
-    function focusByPetId(petId) {
-        if (!petId || !list.petToSighting) return;
-        const sightingId = list.petToSighting.get(String(petId));
-        if (sightingId) {
-            mapView.focusMarker(`sighting:${sightingId}`);
-        } else {
-            console.warn("No sighting found for petID:", petId);
-            alert("No sightings found for this pet yet.");
-        }
-    }
+    if(loadMoreBtn){
 
-    if (searchEl) {
-        let timer = null;
-        searchEl.addEventListener("input", () => {
-            clearTimeout(timer);
-            timer = setTimeout(async () => {
-                currentQuery = searchEl.value.trim();
-                currentPage = 1;
-                await fetchPage(currentPage, currentQuery, false);
-            }, 250);
-        });
-    }
+        loadMoreBtn.addEventListener("click", async ()=>{
 
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener("click", async () => {
-            if (isLoading || !hasMore) return;
+            if(isLoading || !hasMore) return;
+
             currentPage += 1;
-            loadMoreBtn.disabled = true;
-            await fetchPage(currentPage, currentQuery, true);
+
+            await fetchPage(currentPage,currentQuery,true);
+
         });
+
     }
+
+    function focusByPetId(petId){
+
+        if(!petId || !list.petToSighting) return;
+
+        const sightingId = list.petToSighting.get(String(petId));
+
+        if(sightingId){
+            mapView.focusMarker(`sighting:${sightingId}`);
+        }
+    }
+
 })();
