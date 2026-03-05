@@ -1,5 +1,6 @@
 <?php
 require_once 'Models/PetDataSet.php';
+require_once 'Database/Database.php';
 
 //Displays all pet listings by the logged-in user
 
@@ -25,6 +26,24 @@ class ManageListingsController {
 
         //Get all pets for logged-in owner
         $this->view->pets = $petDataSet->getPetsByOwner($ownerID);
+
+        // Get number of sightings per pet for this owner's listings
+        $db = Database::getInstance();
+        $countSql = "
+            SELECT p.petID, COUNT(s.sightingID) AS sightingCount
+            FROM pets p
+            LEFT JOIN sightings s ON p.petID = s.petID
+            WHERE p.ownerID = :ownerID
+            GROUP BY p.petID
+        ";
+        $countStmt = $db->prepare($countSql);
+        $countStmt->bindValue(':ownerID', (int)$ownerID, PDO::PARAM_INT);
+        $countStmt->execute();
+
+        $this->view->sightingCounts = [];
+        foreach ($countStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $this->view->sightingCounts[(int)$row['petID']] = (int)$row['sightingCount'];
+        }
 
         //Pass $view to the view page (.phmtl)
         $view = $this->view;

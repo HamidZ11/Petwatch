@@ -1,63 +1,65 @@
 <?php
-//This is a script to add data to the pets table
-$dbPath = __DIR__ . '/Database/petwatch.db';
-$uploadsDir = __DIR__ . '/uploads';
+// Populate pets table with large realistic dataset
 
-// CHANGED FOR SEMESTER 2 DATASET SCALE (WAS 100)
-$numPets = 1000;
+$dbPath = __DIR__ . '/Database/petwatch.db';
+$numPets = 1500; // target dataset size
 
 $pdo = new PDO('sqlite:' . $dbPath);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-//below are different variables to be randomly assigned to pets
+// Pet types and available images
 $types = [
-    'Dog' => ['dog1.jpg', 'dog2.jpg', 'dog3.jpg'],
-    'Cat' => ['cat1.jpg', 'cat2.jpg', 'cat3.jpg'],
-    'Rabbit' => ['rabbit1.jpg', 'rabbit2.jpg', 'rabbit3.jpg'],
-    'Bird' => ['bird1.jpg', 'bird2.jpg', 'bird3.jpg'],
-    'Hamster' => ['hamster1.jpg', 'hamster2.jpg', 'hamster3.jpg'],
-    'Fish' => ['fish1.jpg', 'fish2.jpg', 'fish3.jpg'],
-    'Turtle' => ['turtle1.jpg', 'turtle2.jpg', 'turtle3.jpg'],
-    'Other' => ['other1.jpg', 'other2.jpg', 'other3.jpg']
+    'Dog' => ['dog1.jpg','dog2.jpg','dog3.jpg','dog4.jpg','dog5.jpg','dog6.jpg','dog7.jpg'],
+    'Cat' => ['cat1.jpg','cat2.jpg','cat3.jpg','cat4.jpg','cat5.jpg','cat6.jpg','cat7.jpg'],
+    'Rabbit' => ['rabbit1.jpg','rabbit2.jpg','rabbit3.jpg','rabbit4.jpg','rabbit5.jpg','rabbit6.jpg'],
+    'Bird' => ['bird1.jpg','bird2.jpg','bird3.jpg','bird4.jpg','bird5.jpg','bird6.jpg','bird7.jpg'],
+    'Hamster' => ['hamster1.jpg','hamster2.jpg','hamster3.jpg','hamster4.jpg','hamster5.jpg','hamster6.jpg'],
+    'Fish' => ['fish1.jpg','fish2.jpg','fish3.jpg','fish4.jpg','fish5.jpg','fish6.jpg'],
+    'Turtle' => ['turtle1.jpg','turtle2.jpg','turtle3.jpg'],
+    'Other' => ['other1.jpg','other2.jpg','other3.jpg']
 ];
 
+// Larger name pool to avoid repetition
 $names = [
-    'Buddy', 'Max', 'Luna', 'Coco', 'Daisy', 'Charlie', 'Milo', 'Bella',
-    'Rocky', 'Nibbles', 'Ollie', 'Rosie', 'Ruby', 'Archie', 'Toby', 'Shadow',
-    'Rex', 'Chester', 'Peanut', 'Poppy'
+    'Buddy','Max','Luna','Coco','Daisy','Charlie','Milo','Bella','Rocky','Nibbles',
+    'Ollie','Rosie','Ruby','Archie','Toby','Shadow','Rex','Chester','Peanut','Poppy',
+    'Simba','Leo','Loki','Zeus','Misty','Willow','Oscar','Buster','Sammy','Lucky',
+    'Jasper','Marley','Mocha','Pumpkin','Biscuit','Pepper','Storm','Honey','Sunny','Hazel',
+    'Scout','Finn','Remy','Ziggy','Maple','Olive','Thor','Atlas','Blue','Copper'
 ];
 
 $descriptions = [
-    'Small and playful temperament.',
-    'Curious and energetic with bright eyes.',
-    'Gentle and calm, enjoys attention.',
-    'Has soft fur and a friendly nature.',
-    'Loves to explore and very alert.',
-    'Playful, loyal and loves people.',
-    'Quiet and affectionate personality.',
-    'Has a shiny coat and wagging tail.',
-    'Timid at first but warms up quickly.',
-    'Has distinctive markings and a calm attitude.',
-    'Curious and loves being around humans.',
-    'Very social and enjoys company.',
-    'Adventurous and always exploring.',
-    'Soft fur and expressive eyes.',
-    'Clever and easily trained.',
-    'Loves to nap in sunny spots.',
-    'Calm and independent.',
-    'Gentle and affectionate companion.',
-    'Very small with round features.',
-    'Friendly and lively little pet.'
+    'Seen wandering near the park entrance.',
+    'Spotted outside the supermarket entrance.',
+    'Found sitting near the playground bench.',
+    'Observed running across the road.',
+    'Resident saw it near their garden fence.',
+    'Appeared calm near a bus stop.',
+    'Hiding under a parked car.',
+    'Walking along the pavement slowly.',
+    'Seen exploring a small alleyway.',
+    'Resting near a shop doorway.',
+    'Spotted crossing the street quickly.',
+    'Moving cautiously through a park path.',
+    'Sitting quietly beside a building.',
+    'Curiously exploring a nearby garden.',
+    'Seen near a local café outdoor seating.',
+    'Appeared friendly but cautious.',
+    'Walking near a row of houses.',
+    'Resting in a shaded corner.',
+    'Observed wandering slowly.',
+    'Seen near a public bench.'
 ];
 
-$statuses = ['missing', 'found'];
+$statuses = ['missing','found'];
 
-$insert = $pdo->prepare('INSERT INTO pets (name, type, age, description, ownerID, status, dateAdded, imagePath)
-                         VALUES (:name, :type, :age, :description, :ownerID, :status, :dateAdded, :imagePath)');
+$insert = $pdo->prepare('
+INSERT INTO pets (name, type, age, description, ownerID, status, dateAdded, imagePath)
+VALUES (:name, :type, :age, :description, :ownerID, :status, :dateAdded, :imagePath)
+');
 
-//for loop to randomly generate pets with the above given data
-//array_rand randomly assigns each variable
 for ($i = 0; $i < $numPets; $i++) {
+
     $type = array_rand($types);
     $image = $types[$type][array_rand($types[$type])];
     $name = $names[array_rand($names)];
@@ -65,10 +67,12 @@ for ($i = 0; $i < $numPets; $i++) {
     $age = random_int(1, 15);
     $status = $statuses[array_rand($statuses)];
 
-    // OWNER DISTRIBUTION REMAINS SAME (100 OWNERS)
+    // distribute across 100 owners
     $ownerID = 101 + ($i % 100);
 
-    $dateAdded = date('Y-m-d H:i:s');
+    // random timestamp within last 60 days
+    $dateAdded = date('Y-m-d H:i:s', strtotime('-' . random_int(0, 60) . ' days'));
+
     $imagePath = 'uploads/' . $image;
 
     $insert->execute([
@@ -82,8 +86,8 @@ for ($i = 0; $i < $numPets; $i++) {
         ':imagePath' => $imagePath
     ]);
 
-    echo " Inserted pet: $name ($type) → Owner $ownerID\n";
+    echo "Inserted pet: $name ($type) → Owner $ownerID\n";
 }
 
-echo "\n $numPets pets added to database.\n";
+echo "\n$numPets pets added to database.\n";
 ?>

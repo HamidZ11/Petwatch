@@ -6,20 +6,27 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <div id="mapApp" data-logged-in="<?= isset($_SESSION['user']) ? '1' : '0' ?>" style="display:flex; gap:16px;">
-        <div style="width:35%; max-height:80vh; overflow:auto;">
-            <h3>Recent sightings</h3>
-            <div style="margin-bottom:8px;">
-                <input id="petSearch" type="text" placeholder="Search pet name or sighting…" class="form-control">
+    <div id="mapApp" data-logged-in="<?= isset($_SESSION['user']) ? '1' : '0' ?>" class="map-container">
+        <div class="map-sidebar">
+            <h3 class="mb-3">Recent sightings</h3>
+            <div class="map-search-wrap">
+                <input id="mapSearch" type="text" placeholder="Search by pet, description, user, or pet ID…" class="form-control search-input">
+            </div>
+            <div class="sort-controls mb-3">
+                <span class="sort-label">Sort by:</span>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Sort sightings">
+                    <button id="sortNewestBtn" type="button" class="btn btn-primary">Newest</button>
+                    <button id="sortOldestBtn" type="button" class="btn btn-outline-primary">Oldest</button>
+                </div>
             </div>
             <div id="petList"></div>
-            <div style="margin-top:8px;">
+            <div class="mt-2">
                 <button id="loadMoreBtn" type="button" class="btn btn-outline-secondary btn-sm">Load more</button>
             </div>
         </div>
 
-        <div style="width:65%;">
-            <div id="map" style="height:80vh; border-radius:8px;"></div>
+        <div class="map-panel">
+            <div id="map" class="map-canvas"></div>
         </div>
     </div>
 

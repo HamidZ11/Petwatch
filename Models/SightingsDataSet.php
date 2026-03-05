@@ -10,11 +10,15 @@ class SightingsDataSet {
     }
 
     // Fetch all sightings (for All Sightings page) with pagination support
-    public function fetchAllSightings($sort = 'dateReported DESC', $limit = 10, $offset = 0) {
+    public function fetchAllSightings($sort = 'dateReported DESC', $limit = 10, $offset = 0, $search = '') {
         $allowedSorts = ['dateReported DESC', 'dateReported ASC', 'petName ASC', 'petName DESC'];
         if (!in_array($sort, $allowedSorts)) {
             $sort = 'dateReported DESC';
         }
+
+        $search = trim((string)$search);
+        $isPetIdSearch = ctype_digit($search);
+        $petIdExact = $isPetIdSearch ? (int)$search : -1;
 
         $sql = "SELECT s.*, 
                        p.name AS petName, 
@@ -22,10 +26,21 @@ class SightingsDataSet {
                 FROM sightings s
                 LEFT JOIN pets p ON s.petID = p.petID
                 LEFT JOIN users u ON s.userID = u.userID
+                WHERE (
+                    :search = ''
+                    OR p.name LIKE :searchLike
+                    OR s.description LIKE :searchLike
+                    OR u.username LIKE :searchLike
+                    OR (:isPetIdSearch = 1 AND p.petID = :petIdExact)
+                )
                 ORDER BY $sort
                 LIMIT :limit OFFSET :offset";
 
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':search', $search, PDO::PARAM_STR);
+        $stmt->bindValue(':searchLike', '%' . $search . '%', PDO::PARAM_STR);
+        $stmt->bindValue(':isPetIdSearch', $isPetIdSearch ? 1 : 0, PDO::PARAM_INT);
+        $stmt->bindValue(':petIdExact', $petIdExact, PDO::PARAM_INT);
         $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -49,9 +64,28 @@ class SightingsDataSet {
     }
 
     // Get total number of sightings for pagination
-    public function getTotalSightingsCount() {
-        $sql = "SELECT COUNT(*) FROM sightings";
+    public function getTotalSightingsCount($search = '') {
+        $search = trim((string)$search);
+        $isPetIdSearch = ctype_digit($search);
+        $petIdExact = $isPetIdSearch ? (int)$search : -1;
+        $sql = "
+            SELECT COUNT(*)
+            FROM sightings s
+            LEFT JOIN pets p ON s.petID = p.petID
+            LEFT JOIN users u ON s.userID = u.userID
+            WHERE (
+                :search = ''
+                OR p.name LIKE :searchLike
+                OR s.description LIKE :searchLike
+                OR u.username LIKE :searchLike
+                OR (:isPetIdSearch = 1 AND p.petID = :petIdExact)
+            )
+        ";
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':search', $search, PDO::PARAM_STR);
+        $stmt->bindValue(':searchLike', '%' . $search . '%', PDO::PARAM_STR);
+        $stmt->bindValue(':isPetIdSearch', $isPetIdSearch ? 1 : 0, PDO::PARAM_INT);
+        $stmt->bindValue(':petIdExact', $petIdExact, PDO::PARAM_INT);
         $stmt->execute();
         return (int)$stmt->fetchColumn();
     }
@@ -97,21 +131,27 @@ class SightingsDataSet {
     // Count sightings with pet fields, optionally filtered by search term
     public function countSightingsWithPets($search = '') {
         $search = trim((string)$search);
+        $isPetIdSearch = ctype_digit($search);
+        $petIdExact = $isPetIdSearch ? (int)$search : -1;
         $sql = "
             SELECT COUNT(*)
             FROM sightings s
             INNER JOIN pets p ON s.petID = p.petID
+            LEFT JOIN users u ON s.userID = u.userID
             WHERE (
                 :search = ''
                 OR p.name LIKE :searchLike
-                OR p.type LIKE :searchLike
                 OR s.description LIKE :searchLike
+                OR u.username LIKE :searchLike
+                OR (:isPetIdSearch = 1 AND p.petID = :petIdExact)
             )
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':search', $search, PDO::PARAM_STR);
         $stmt->bindValue(':searchLike', '%' . $search . '%', PDO::PARAM_STR);
+        $stmt->bindValue(':isPetIdSearch', $isPetIdSearch ? 1 : 0, PDO::PARAM_INT);
+        $stmt->bindValue(':petIdExact', $petIdExact, PDO::PARAM_INT);
         $stmt->execute();
 
         return (int)$stmt->fetchColumn();
@@ -120,6 +160,10 @@ class SightingsDataSet {
     // Fetch sightings with pet details (for map markers), with optional search + pagination
     public function fetchSightingsWithPets($search = '', $limit = 20, $offset = 0) {
         $search = trim((string)$search);
+        $sort = isset($_GET['sort']) && $_GET['sort'] === 'oldest' ? 'oldest' : 'newest';
+        $orderDir = $sort === 'oldest' ? 'ASC' : 'DESC';
+        $isPetIdSearch = ctype_digit($search);
+        $petIdExact = $isPetIdSearch ? (int)$search : -1;
         $sql = "
             SELECT
                 s.sightingID,
@@ -132,6 +176,7 @@ class SightingsDataSet {
                 p.type,
                 p.status,
                 p.description AS petDescription,
+                u.username AS username,
                 u.username AS reporterName
             FROM sightings s
             INNER JOIN pets p ON s.petID = p.petID
@@ -139,16 +184,19 @@ class SightingsDataSet {
             WHERE (
                 :search = ''
                 OR p.name LIKE :searchLike
-                OR p.type LIKE :searchLike
                 OR s.description LIKE :searchLike
+                OR u.username LIKE :searchLike
+                OR (:isPetIdSearch = 1 AND p.petID = :petIdExact)
             )
-            ORDER BY s.dateReported DESC, s.sightingID DESC
+            ORDER BY s.dateReported $orderDir, s.sightingID $orderDir
             LIMIT :limit OFFSET :offset
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':search', $search, PDO::PARAM_STR);
         $stmt->bindValue(':searchLike', '%' . $search . '%', PDO::PARAM_STR);
+        $stmt->bindValue(':isPetIdSearch', $isPetIdSearch ? 1 : 0, PDO::PARAM_INT);
+        $stmt->bindValue(':petIdExact', $petIdExact, PDO::PARAM_INT);
         $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -158,6 +206,8 @@ class SightingsDataSet {
 
     // Fetch all sightings for a specific pet (used by "Show on map")
     public function fetchSightingsByPet($petID) {
+        $sort = isset($_GET['sort']) && $_GET['sort'] === 'oldest' ? 'oldest' : 'newest';
+        $orderDir = $sort === 'oldest' ? 'ASC' : 'DESC';
         $sql = "
             SELECT
                 s.sightingID,
@@ -170,12 +220,13 @@ class SightingsDataSet {
                 p.type,
                 p.status,
                 p.description AS petDescription,
+                u.username AS username,
                 u.username AS reporterName
             FROM sightings s
             INNER JOIN pets p ON s.petID = p.petID
             LEFT JOIN users u ON s.userID = u.userID
             WHERE s.petID = :petID
-            ORDER BY s.dateReported DESC, s.sightingID DESC
+            ORDER BY s.dateReported $orderDir, s.sightingID $orderDir
         ";
 
         $stmt = $this->db->prepare($sql);

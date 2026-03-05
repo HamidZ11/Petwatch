@@ -34,20 +34,22 @@
                                     <td><?= htmlspecialchars($sighting['dateReported']) ?></td>
                                     <td><?= htmlspecialchars($sighting['username'] ?? 'Unknown') ?></td>
 
-                                    <!-- Only show edit/delete if the logged-in user reported it -->
                                     <td>
+                                        <a href="index.php?page=map&petID=<?= urlencode($sighting['petID']) ?>&lat=<?= urlencode($sighting['latitude'] ?? '') ?>&lng=<?= urlencode($sighting['longitude'] ?? '') ?>"
+                                           class="btn btn-sm btn-info mb-1">
+                                            View on Map
+                                        </a>
+
                                         <?php if (
-                                                isset($_SESSION['user']) &&
-                                                isset($sighting['userID']) &&
-                                                $_SESSION['user']['userID'] == $sighting['userID']
+                                            isset($_SESSION['user']) &&
+                                            isset($sighting['userID']) &&
+                                            $_SESSION['user']['userID'] == $sighting['userID']
                                         ): ?>
                                             <a href="index.php?page=editSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>"
-                                               class="btn btn-sm btn-outline-warning mb-1">Edit</a>
-                                            <a href="index.php?page=deleteSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>"
-                                               class="btn btn-sm btn-outline-danger"
+                                               class="btn btn-sm btn-warning mb-1">Edit</a>
+                                            <a href="index.php?page=deleteSighting&sightingID=<?= urlencode($sighting['sightingID']) ?>&petID=<?= urlencode($sighting['petID']) ?>"
+                                               class="btn btn-sm btn-danger"
                                                onclick="return confirm('Are you sure you want to delete this sighting?');">Delete</a>
-                                        <?php else: ?>
-                                            <span class="text-muted">—</span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>

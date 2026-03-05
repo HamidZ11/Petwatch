@@ -2,12 +2,12 @@
 
     <!-- View file for All Pet Listings page -->
     <!-- Includes filters, sorting, pagination, and responsive layouts -->
-    <form method="GET" action="index.php"
+    <form method="GET" action="index.php" id="petsSearchForm"
           class="mb-4 d-flex flex-wrap align-items-center gap-2 justify-content-center">
         <input type="hidden" name="page" value="pets">
 
         <!-- Search keyword -->
-        <input type="text" name="search" class="form-control w-auto"
+        <input type="text" name="search" id="petSearch" class="form-control w-auto"
                placeholder="Name or description..."
                value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
 
@@ -52,6 +52,7 @@
         <a href="index.php?page=reportSighting" class="btn btn-outline-success">Report a Sighting</a>
     </form>
 
+    <div id="petsContainer">
     <!-- Pet listings table/card -->
     <div class="card shadow-sm">
         <div class="card-body">
@@ -193,7 +194,9 @@
                 </div>
 
             <?php else: ?>
-                <p class="text-center text-muted">No pets found in the system.</p>
+                <p class="text-center text-muted">
+                    <?= !empty($_GET['search']) ? 'No results found.' : 'No pets found in the system.' ?>
+                </p>
             <?php endif; ?>
         </div>
     </div>
@@ -250,5 +253,6 @@
         </form>
     </div>
 <?php endif; ?>
+    </div>
 
 <?php require('template/footer.phtml'); ?>

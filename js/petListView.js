@@ -21,24 +21,33 @@ class PetListView {
         this.el.innerHTML = "";
         const list = this.items;
 
+        if (list.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "text-muted mb-0";
+            empty.textContent = "No sightings found.";
+            this.el.appendChild(empty);
+            return;
+        }
+
         list.forEach(p => {
             const row = document.createElement("div");
-            row.style.border = "1px solid #ddd";
-            row.style.padding = "10px";
-            row.style.marginBottom = "8px";
-            row.style.borderRadius = "8px";
+            row.className = "card-sighting";
             row.dataset.petId = String(p.petID ?? "");
 
             row.innerHTML = `
-        <div><b>${this.esc(p.name)}</b> (${this.esc(p.type)})</div>
-        <div style="font-size: 0.9em; opacity:0.8;">${this.esc(p.sightingDescription || "No sightings yet")}</div>
-        <div style="margin-top:8px; display:flex; gap:8px;">
-          <button data-action="focus">Show on map</button>
-          <button data-action="report">Add sighting</button>
+        <div class="sighting-title"><b>${this.esc(p.name)}</b> (${this.esc(p.type)})</div>
+        <div class="sighting-desc">${this.esc(p.sightingDescription || "No sightings yet")}</div>
+        <p class="text-muted small mb-2">
+          Reported by: ${this.esc(p.reporterName || "Unknown")}
+          • Sighting ID: ${this.esc(p.sightingID ?? "")}
+        </p>
+        <div class="sighting-actions">
+          <button data-action="focus" class="btn btn-sm btn-outline-primary">Show on map</button>
+          <button data-action="report" class="btn btn-sm btn-outline-secondary">Add sighting</button>
         </div>
       `;
 
-            row.querySelector('[data-action="focus"]').onclick = () => this.onSelect(p.petID);
+            row.querySelector('[data-action="focus"]').onclick = () => this.onSelect(p.sightingID);
             row.querySelector('[data-action="report"]').onclick = () => this.onReport(p.petID);
 
             this.el.appendChild(row);

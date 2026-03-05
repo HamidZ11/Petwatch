@@ -31,24 +31,25 @@ body {
     justify-content: space-between;
     gap: 1rem;
     width: 100%;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .nav-groups .navbar-nav {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .nav-main {
-    flex: 1;
+    flex: 0 1 auto;
     justify-content: center;
     gap: 1rem;
 }
 
 .nav-account {
     margin-left: auto;
+    flex: 0 0 auto;
 }
 
 .navbar .nav-link {
@@ -251,4 +252,116 @@ footer small {
     table {
         min-width: 1000px;
     }
+}
+
+/* Map Page */
+.map-container {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.map-sidebar {
+    width: 35%;
+    max-height: 80vh;
+    overflow: auto;
+    background: #ffffff;
+    border: 1px solid #e8eef5;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.map-panel {
+    width: 65%;
+}
+
+.map-canvas {
+    height: 80vh;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e8eef5;
+}
+
+.map-search-wrap {
+    margin-bottom: 12px;
+}
+
+.search-input {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #dcdcdc;
+}
+
+.search-input:focus {
+    border-color: #7aa9e6;
+    box-shadow: 0 0 0 0.2rem rgba(58, 123, 213, 0.12);
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.card-sighting {
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #e6e6e6;
+    margin-bottom: 12px;
+    background: #fff;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.card-sighting:hover {
+    background: #f8fbff;
+    border-color: #d4e4f8;
+}
+
+.sighting-title {
+    margin-bottom: 6px;
+}
+
+.sighting-desc {
+    font-size: 0.92rem;
+    color: #5f6c7b;
+    margin-bottom: 8px;
+}
+
+.sighting-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 992px) {
+    .map-container {
+        flex-direction: column;
+    }
+
+    .map-sidebar,
+    .map-panel {
+        width: 100%;
+    }
+}
+
+.all-sightings-table {
+    width: 100%;
+    table-layout: auto;
+}
+
+.page-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.table td,
+.table th {
+    padding: 12px 14px;
+    vertical-align: middle;
 }

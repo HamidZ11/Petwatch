@@ -6,26 +6,37 @@
     const params = new URLSearchParams(window.location.search);
     const focusPetId = params.get("petID");
     const focusSightingId = params.get("sightingID");
+    const focusLat = Number(params.get("lat"));
+    const focusLng = Number(params.get("lng"));
 
     const appEl = document.getElementById("mapApp");
     const isLoggedIn = appEl?.dataset?.loggedIn === "1";
 
-    const searchEl = document.getElementById("petSearch");
+    const searchEl = document.getElementById("mapSearch") || document.getElementById("petSearch");
     const loadMoreBtn = document.getElementById("loadMoreBtn");
+    const sortNewestBtn = document.getElementById("sortNewestBtn");
+    const sortOldestBtn = document.getElementById("sortOldestBtn");
 
     const limit = 20;
 
     let currentPage = 1;
     let currentQuery = "";
+    let currentSort = params.get("sort") === "oldest" ? "oldest" : "newest";
+    let activePetId = focusPetId;
     let isLoading = false;
     let hasMore = false;
     let requestSeq = 0;
 
-    const fallbackCenter = { lat:53.483959 , lng:-2.244644 , zoom:12 };
+    const fallbackCenter = { lat:53.4808 , lng:-2.2426 , zoom:12 };
 
     mapView.setCenter(fallbackCenter.lat,fallbackCenter.lng,fallbackCenter.zoom);
 
-    if(navigator.geolocation){
+    if(
+        navigator.geolocation &&
+        !focusPetId &&
+        !focusSightingId &&
+        !(Number.isFinite(focusLat) && Number.isFinite(focusLng))
+    ){
         navigator.geolocation.getCurrentPosition(
             pos => mapView.setCenter(pos.coords.latitude,pos.coords.longitude,13),
             () => mapView.setCenter(fallbackCenter.lat,fallbackCenter.lng,fallbackCenter.zoom)
@@ -35,7 +46,7 @@
     const list = new PetListView(
         document.getElementById("petList"),
 
-        (petId)=>focusByPetId(petId),
+        (sightingId)=>focusBySightingId(sightingId),
 
         (petId)=>{
             if(!petId) return;
@@ -51,6 +62,17 @@
     );
 
     list.petToSighting = new Map();
+
+    function syncSortButtons(){
+        if(!sortNewestBtn || !sortOldestBtn) return;
+        if(currentSort === "oldest"){
+            sortNewestBtn.className = "btn btn-outline-primary";
+            sortOldestBtn.className = "btn btn-primary";
+            return;
+        }
+        sortNewestBtn.className = "btn btn-primary";
+        sortOldestBtn.className = "btn btn-outline-primary";
+    }
 
     function esc(s){
         return String(s ?? "").replace(/[&<>"']/g,c=>({
@@ -68,6 +90,8 @@
         list.setItems([]);
         list.petToSighting = new Map();
 
+        let focusMarkerKey = null;
+
         sightings.forEach((s,i)=>{
 
             const lat = Number(s.latitude);
@@ -82,6 +106,15 @@
             const petKey = String(s.petID);
             list.petToSighting.set(petKey,s.sightingID);
 
+            if (
+                Number.isFinite(focusLat) &&
+                Number.isFinite(focusLng) &&
+                Math.abs(lat - focusLat) < 0.000001 &&
+                Math.abs(lng - focusLng) < 0.000001
+            ) {
+                focusMarkerKey = `sighting:${s.sightingID}`;
+            }
+
         });
 
         const listItems = sightings.map(s=>({
@@ -90,7 +123,9 @@
             name:s.name,
             type:s.type,
             sightingDescription:s.sightingDescription,
-            sightingID:s.sightingID
+            sightingID:s.sightingID,
+            username:s.username,
+            reporterName:s.username || s.reporterName
 
         }));
 
@@ -99,6 +134,22 @@
         // If a specific sighting was requested, focus it
         if (focusSightingId) {
             mapView.focusMarker(`sighting:${focusSightingId}`);
+            if (Number.isFinite(focusLat) && Number.isFinite(focusLng)) {
+                mapView.setCenter(focusLat, focusLng, 15);
+            }
+            return;
+        }
+
+        // If specific coordinates were requested, focus that marker and zoom in
+        if (focusMarkerKey) {
+            mapView.focusMarker(focusMarkerKey);
+            mapView.setCenter(focusLat, focusLng, 15);
+            return;
+        }
+
+        // Fallback: center map on coordinates even if marker key was not matched exactly
+        if (Number.isFinite(focusLat) && Number.isFinite(focusLng)) {
+            mapView.setCenter(focusLat, focusLng, 15);
         }
     }
 
@@ -107,21 +158,24 @@
         if(isLoading) return;
 
         isLoading = true;
+        const currentRequest = ++requestSeq;
 
         try{
 
             let res;
 
-            if(focusPetId){
+            if(activePetId && !query){
 
                 res = await api.get("/index.php?page=api_missing_pets",{
-                    petID:focusPetId
+                    petID:activePetId,
+                    sort:currentSort
                 });
 
             }else{
 
                 res = await api.get("/index.php?page=api_missing_pets",{
                     search:query,
+                    sort:currentSort,
                     pageNum:page,
                     limit
                 });
@@ -131,6 +185,7 @@
             if(!res || res.ok !== true){
                 throw new Error("Unable to fetch sightings");
             }
+            if(currentRequest !== requestSeq) return;
 
             const sightings = Array.isArray(res.data) ? res.data : [];
 
@@ -157,7 +212,9 @@
                     name:s.name,
                     type:s.type,
                     sightingDescription:s.sightingDescription,
-                    sightingID:s.sightingID
+                    sightingID:s.sightingID,
+                    username:s.username,
+                    reporterName:s.username || s.reporterName
                 }));
 
                 list.appendItems(listItems);
@@ -165,9 +222,11 @@
 
             const total = Number(res.total ?? 0);
 
-            if(!focusPetId && loadMoreBtn){
+            if(!activePetId && loadMoreBtn){
                 hasMore = (page * limit) < total;
                 loadMoreBtn.style.display = hasMore ? "inline-block" : "none";
+            } else if (loadMoreBtn) {
+                loadMoreBtn.style.display = "none";
             }
 
         }catch(err){
@@ -179,6 +238,7 @@
     }
 
     await fetchPage(currentPage,currentQuery);
+    syncSortButtons();
 
     if(loadMoreBtn){
 
@@ -194,15 +254,54 @@
 
     }
 
-    function focusByPetId(petId){
+    if(searchEl){
+        let timer = null;
+        searchEl.addEventListener("input", ()=>{
+            clearTimeout(timer);
+            timer = setTimeout(async ()=>{
+                currentQuery = searchEl.value.trim();
+                if(currentQuery){
+                    activePetId = null;
+                }
+                currentPage = 1;
+                hasMore = false;
+                if(loadMoreBtn){
+                    loadMoreBtn.style.display = "none";
+                }
+                await fetchPage(currentPage,currentQuery,false);
+            },300);
+        });
+    }
 
-        if(!petId || !list.petToSighting) return;
+    if(sortNewestBtn && sortOldestBtn){
+        sortNewestBtn.addEventListener("click", async ()=>{
+            if(currentSort === "newest") return;
+            currentSort = "newest";
+            currentPage = 1;
+            hasMore = false;
+            syncSortButtons();
+            if(loadMoreBtn){
+                loadMoreBtn.style.display = "none";
+            }
+            await fetchPage(currentPage,currentQuery,false);
+        });
 
-        const sightingId = list.petToSighting.get(String(petId));
+        sortOldestBtn.addEventListener("click", async ()=>{
+            if(currentSort === "oldest") return;
+            currentSort = "oldest";
+            currentPage = 1;
+            hasMore = false;
+            syncSortButtons();
+            if(loadMoreBtn){
+                loadMoreBtn.style.display = "none";
+            }
+            await fetchPage(currentPage,currentQuery,false);
+        });
+    }
 
-        if(sightingId){
-            mapView.focusMarker(`sighting:${sightingId}`);
-        }
+    function focusBySightingId(sightingId){
+        if(!sightingId) return;
+        mapView.focusMarker(`sighting:${sightingId}`);
     }
 
 })();

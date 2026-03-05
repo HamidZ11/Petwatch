@@ -1,9 +1,13 @@
 <?php require('template/header.phtml'); ?>
-    <div class="container py-5">
+    <div class="container-fluid py-5">
+        <div class="page-wrapper">
         <h2 class="text-center mb-4">All Sightings</h2>
 
-        <form method="GET" class="text-center mb-4">
+        <form method="GET" id="sightingsSearchForm" class="text-center mb-4 d-flex flex-wrap gap-2 justify-content-center align-items-center">
             <input type="hidden" name="page" value="sightings">
+            <input type="text" name="search" id="sightingSearch" class="form-control w-auto"
+                   placeholder="Search sightings..."
+                   value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
             <label for="sort" class="me-2 fw-semibold">Sort by:</label>
             <select name="sort" id="sort" class="form-select d-inline-block w-auto">
                 <option value="dateReported DESC" <?= ($_GET['sort'] ?? '') === 'dateReported DESC' ? 'selected' : '' ?>>Newest First</option>
@@ -14,13 +18,14 @@
             <button type="submit" class="btn btn-primary btn-sm ms-2">Sort</button>
         </form>
 
+        <div id="sightingsContainer">
         <div class="card shadow-sm">
             <div class="card-body">
 
                 <?php if (!empty($view->sightingsDataSet)): ?>
 
                     <div class="table-responsive d-none d-md-block">
-                        <table class="table table-striped table-hover align-middle">
+                        <table class="table table-striped table-hover align-middle w-100 all-sightings-table">
                             <thead class="table-dark">
                             <tr>
                                 <th>Sighting ID</th>
@@ -117,13 +122,14 @@
 
                 <?php else: ?>
 
-                    <p class="text-center text-muted">No sightings recorded yet.</p>
+                    <p class="text-center text-muted">
+                        <?= !empty($_GET['search']) ? 'No results found.' : 'No sightings recorded yet.' ?>
+                    </p>
 
                 <?php endif; ?>
 
             </div>
         </div>
-    </div>
 
 <?php if (!empty($view->sightingsDataSet)): ?>
 <?php
@@ -186,5 +192,8 @@ $end = min($totalPages, $currentPage + 2);
 </div>
 
 <?php endif; ?>
+        </div>
+    </div>
+    </div>
 
 <?php require('template/footer.phtml'); ?>

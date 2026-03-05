@@ -11,18 +11,19 @@ class SightingsController {
 
         // Default sort order
         $sort = $_GET['sort'] ?? 'dateReported DESC';
+        $search = $_GET['search'] ?? '';
 
         // Pagination setup
         $limit = 10;
         $pageNum = isset($_GET['pageNum']) ? max(1, (int)$_GET['pageNum']) : 1;
 
         $sightingsDataSet = new SightingsDataSet();
-        $totalSightings = $sightingsDataSet->getTotalSightingsCount();
+        $totalSightings = $sightingsDataSet->getTotalSightingsCount($search);
         $totalPages = max(1, (int)ceil($totalSightings / $limit));
         $pageNum = min($pageNum, $totalPages);
         $offset = ($pageNum - 1) * $limit;
 
-        $this->view->sightingsDataSet = $sightingsDataSet->fetchAllSightings($sort, $limit, $offset);
+        $this->view->sightingsDataSet = $sightingsDataSet->fetchAllSightings($sort, $limit, $offset, $search);
         $this->view->currentPage = $pageNum;
         $this->view->totalPages = $totalPages;
 
