@@ -1,8 +1,11 @@
 <?php require('template/header.phtml'); ?>
+    <!-- Main page wrapper -->
     <div class="container-fluid py-5">
         <div class="page-wrapper">
+        <!-- Page title -->
         <h2 class="text-center mb-4">All Sightings</h2>
 
+        <!-- Search and sort controls -->
         <form method="GET" id="sightingsSearchForm" class="text-center mb-4 d-flex flex-wrap gap-2 justify-content-center align-items-center">
             <input type="hidden" name="page" value="sightings">
             <input type="text" name="search" id="sightingSearch" class="form-control w-auto"
@@ -24,6 +27,7 @@
 
                 <?php if (!empty($view->sightingsDataSet)): ?>
 
+                    <!-- Desktop table view -->
                     <div class="table-responsive d-none d-md-block">
                         <table class="table table-striped table-hover align-middle w-100 all-sightings-table">
                             <thead class="table-dark">
@@ -84,6 +88,7 @@
                     </div>
 
 
+                    <!-- Mobile card view -->
                     <div class="d-block d-md-none mt-4">
 
                         <?php foreach ($view->sightingsDataSet as $sighting): ?>
@@ -122,6 +127,7 @@
 
                 <?php else: ?>
 
+                    <!-- Message when there are no results -->
                     <p class="text-center text-muted">
                         <?= !empty($_GET['search']) ? 'No results found.' : 'No sightings recorded yet.' ?>
                     </p>
@@ -145,6 +151,7 @@ $buildUrl = function ($pageNum) use ($baseUrl, $queryString) {
 };
 ?>
 
+<!-- Pagination controls -->
 <div class="d-flex justify-content-center mt-4 align-items-center gap-3 flex-wrap">
 
 <?php if ($currentPage > 1): ?>
